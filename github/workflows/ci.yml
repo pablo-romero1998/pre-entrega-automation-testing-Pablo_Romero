@@ -1,0 +1,49 @@
+name: CI talentoTech
+on:
+  push:
+    branches: [main,develop]
+  pull_request:
+    branches: [main,develop]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      PYTHON_VERSION: '3.12'
+
+      PIP_CACHE:~/.cache/pip 
+    steps:
+    #1 Checout
+    - name: Checkout codigo
+      uses: actions/checkout@v4
+    #2 Cache pip
+      with:
+        path: ${{ env.PIP_CACHE }}
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+
+    #3 Setup 
+    - name: Setup Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    #4 Instalar dependencias
+    - name: Instalar dependencias
+      run: pip install -r requirements.txt
+
+    #5 Run tests
+    - name: Run tests
+      run: python3 run_tests.py
+
+    #6 subir artefactos (reporte + imagenes + logs)
+    - name: Subir HTML Report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: html-report
+        path: reports/
+
+    - name: Subir logs
+      uses: actions/upload-artifact@v4
+      with:
+        name: suite-log
+        path: logs/
